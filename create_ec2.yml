@@ -1,0 +1,41 @@
+---
+- name: Launch EC2 instance in AWS
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  vars:
+    key_name: my-key                 # existing key pair name
+    instance_type: t2.micro          # EC2 instance type
+    image_id: ami-052064a798f08f0d3  # example Amazon Linux 2 AMI (change per region)
+    region: us-east-1
+    security_group: default          # existing security group name
+    instance_name: ansible-ec2-server
+    subnet_id: ""                    # optional - if you want to launch in a specific subnet
+    assign_public_ip: true
+
+  tasks:
+    - name: Launch EC2 instance
+      amazon.aws.ec2_instance:
+        name: "{{ instance_name }}"
+        key_name: "{{ key_name }}"
+        instance_type: "{{ instance_type }}"
+        image_id: "{{ image_id }}"
+        region: "{{ region }}"
+        security_groups: [ "{{ security_group }}" ]
+        network:
+          assign_public_ip: "{{ assign_public_ip }}"
+          subnet_id: "{{ subnet_id | default(omit) }}"
+        wait: true
+        tags:
+          Name: "{{ instance_name }}"
+      register: ec2
+
+    - name: Show instance details
+      debug:
+        msg:
+          - "✅ EC2 instance launched successfully!"
+          - "Instance ID: {{ ec2.instances[0].id }}"
+          - "Public IP: {{ ec2.instances[0].public_ip_address }}"
+          - "Private IP: {{ ec2.instances[0].private_ip_address }}"
+          - "State: {{ ec2.instances[0].state.name }}"
