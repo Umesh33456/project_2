@@ -1,42 +1,39 @@
 pipeline {
+    environment { 
+        registry = "umesh33456/poc" 
+        registryCredential = 'docker-hub' 
+        dockerImage = '' 
+    }
     agent any
 
-    environment {
-        ANSIBLE_HOST_KEY_CHECKING = 'False'
-    }
-
     stages {
-        stage('Checkout Code') {
+        
+        stage('Build Image') {
             steps {
-                echo "🔄 Checking out source code..."
-                checkout scm  // Uses the branch Jenkins is already building
-            }
-        }
-
-        stage('Run Ansible Playbook to Launch EC2') {
-            steps {
-                echo "🚀 Running Ansible Playbook to launch EC2..."
-                withCredentials([
-                    aws(credentialsId: 'aws-access-key',
-                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')
-                ]) {
-                    sh '''
-                        ansible-playbook create_ec2.yml \
-                            -e "aws_access_key=${AWS_ACCESS_KEY_ID}" \
-                            -e "aws_secret_key=${AWS_SECRET_ACCESS_KEY}"
-                    '''
+                echo 'Building Docker Image'
+                script {
+                    dockerImage = docker.build registry + ":$BUILD_NUMBER"
                 }
             }
         }
-    }
-
-    post {
-        success {
-            echo '✅ EC2 instance created successfully!'
+        
+        stage('Deploy Image') {
+            steps {
+                echo 'Pushing Docker Image'
+                script {
+                   docker.withRegistry( '', registryCredential ) {
+                   dockerImage.push("$BUILD_NUMBER")
+                   dockerImage.push('latest')
+                  }
+                }
+            }
         }
-        failure {
-            echo '❌ Jenkins job failed. Check logs for details.'
-        }
+        
+        stage('Clean Up') {
+            steps {
+                sh "docker rmi $registry:$BUILD_NUMBER"
+                sh "docker rmi $registry:latest"
+            }
+        }       
     }
 }
