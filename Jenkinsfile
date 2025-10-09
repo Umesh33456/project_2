@@ -22,7 +22,7 @@ pipeline {
                         secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')
                 ]) {
                     sh '''
-                        ansible-playbook ansible/create_ec2.yml \
+                        ansible-playbook create_ec2.yml \
                             -e "aws_access_key=${AWS_ACCESS_KEY_ID}" \
                             -e "aws_secret_key=${AWS_SECRET_ACCESS_KEY}"
                     '''
