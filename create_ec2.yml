@@ -3,15 +3,16 @@
   hosts: localhost
   connection: local
   gather_facts: false
-
   vars:
-    key_name: my-key                 # existing key pair name
-    instance_type: t2.micro          # EC2 instance type
-    image_id: ami-052064a798f08f0d3  # example Amazon Linux 2 AMI (change per region)
+    ansible_python_interpreter: /usr/bin/python3
+
+    key_name: my-key
+    instance_type: t2.micro
+    image_id: ami-052064a798f08f0d3
     region: us-east-1
-    security_group: default          # existing security group name
+    security_group: default
     instance_name: ansible-ec2-server
-    subnet_id: ""                    # optional - if you want to launch in a specific subnet
+    subnet_id: ""
     assign_public_ip: true
 
   tasks:
